@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Box", "Box\Box.vcxproj", "{A227EF45-5812-41F6-AFC9-48F224BC04BF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "2DTest", "2DTest\2DTest.vcxproj", "{06274CD5-1141-436F-A98C-AD409C11D2DE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A227EF45-5812-41F6-AFC9-48F224BC04BF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A227EF45-5812-41F6-AFC9-48F224BC04BF}.Debug|Win32.Build.0 = Debug|Win32
+		{A227EF45-5812-41F6-AFC9-48F224BC04BF}.Release|Win32.ActiveCfg = Release|Win32
+		{A227EF45-5812-41F6-AFC9-48F224BC04BF}.Release|Win32.Build.0 = Release|Win32
+		{06274CD5-1141-436F-A98C-AD409C11D2DE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{06274CD5-1141-436F-A98C-AD409C11D2DE}.Debug|Win32.Build.0 = Debug|Win32
+		{06274CD5-1141-436F-A98C-AD409C11D2DE}.Release|Win32.ActiveCfg = Release|Win32
+		{06274CD5-1141-436F-A98C-AD409C11D2DE}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
