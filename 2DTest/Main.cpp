@@ -5,11 +5,6 @@
 #include <d3dx11.h>
 #include <d3dx10.h>
 
-// include the Direct3D Library file
-#pragma comment (lib, "d3d11.lib")
-#pragma comment (lib, "d3dx11.lib")
-#pragma comment (lib, "d3dx10.lib")
-
 // define the screen resolution
 #define SCREEN_WIDTH  800
 #define SCREEN_HEIGHT 600
@@ -24,7 +19,7 @@ ID3D11VertexShader *pVS;               // the pointer to the vertex shader
 ID3D11PixelShader *pPS;                // the pointer to the pixel shader
 ID3D11Buffer *pVBuffer;                // the pointer to the vertex buffer
 
-// a struct to define a single vertex
+// represent a simple vertex in struct form. 3D coordinate and a color
 struct VERTEX{FLOAT X, Y, Z; D3DXCOLOR Color;};
 
 // function prototypes
@@ -45,20 +40,21 @@ int WINAPI WinMain(HINSTANCE hInstance,
                    int nCmdShow)
 {
     HWND hWnd;
-    WNDCLASSEX wc;
+    WNDCLASSEX window;
 
-    ZeroMemory(&wc, sizeof(WNDCLASSEX));
+    ZeroMemory(&window, sizeof(WNDCLASSEX));
 
-    wc.cbSize = sizeof(WNDCLASSEX);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = hInstance;
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.lpszClassName = L"WindowClass";
+    window.cbSize = sizeof(WNDCLASSEX);
+    window.style = CS_HREDRAW | CS_VREDRAW;
+    window.lpfnWndProc = WindowProc;
+    window.hInstance = hInstance;
+    window.hCursor = LoadCursor(NULL, IDC_ARROW);
+    window.lpszClassName = L"WindowClass";
 
-    RegisterClassEx(&wc);
+    RegisterClassEx(&window);
 
     RECT wr = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+	// Adjust the window so that we have the specified amount of client real estate
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
 
     hWnd = CreateWindowEx(NULL,
@@ -79,12 +75,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
     // set up and initialize Direct3D
     InitD3D(hWnd);
 
-    // enter the main loop:
-
-    MSG msg;
+    // enter the main event loop
+	
+    MSG msg; // Holder for Windows event messages
 
     while(TRUE)
     {
+		// Use Peek to avoid blocking, just for fun
         if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
@@ -109,6 +106,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 {
     switch(message)
     {
+		// program closing
         case WM_DESTROY:
             {
                 PostQuitMessage(0);
@@ -116,11 +114,11 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             } break;
     }
 
-    return DefWindowProc (hWnd, message, wParam, lParam);
+    return DefWindowProc (hWnd, message, wParam, lParam); // take care of messages that we aren't handling directly ourselves
 }
 
 
-// this function initializes and prepares Direct3D for use
+// initiallize and prepare Direct3D for use
 void InitD3D(HWND hWnd)
 {
     // create a struct to hold information about the swap chain
@@ -141,18 +139,9 @@ void InitD3D(HWND hWnd)
     scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;    // allow full-screen switching
 
     // create a device, device context and swap chain using the information in the scd struct
-    D3D11CreateDeviceAndSwapChain(NULL,
-                                  D3D_DRIVER_TYPE_HARDWARE,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  NULL,
-                                  D3D11_SDK_VERSION,
-                                  &scd,
-                                  &swapchain,
-                                  &dev,
-                                  NULL,
-                                  &devcon);
+	// For the most part, this won't need to change
+    D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, NULL, NULL, NULL, D3D11_SDK_VERSION, &scd,
+                                  &swapchain, &dev, NULL, &devcon);
 
 
     // get the address of the back buffer
@@ -167,7 +156,7 @@ void InitD3D(HWND hWnd)
     devcon->OMSetRenderTargets(1, &backbuffer, NULL);
 
 
-    // Set the viewport
+    // Set up the viewport
     D3D11_VIEWPORT viewport;
     ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
@@ -183,11 +172,11 @@ void InitD3D(HWND hWnd)
 }
 
 
-// this is the function used to render a single frame
+// render a single frame
 void RenderFrame(void)
 {
     // clear the back buffer to a deep blue
-    devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+    devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.8f, 0.2f, 1.0f));
 
         // select which vertex buffer to display
         UINT stride = sizeof(VERTEX);
@@ -195,17 +184,17 @@ void RenderFrame(void)
         devcon->IASetVertexBuffers(0, 1, &pVBuffer, &stride, &offset);
 
         // select which primtive type we are using
-        devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         // draw the vertex buffer to the back buffer
         devcon->Draw(3, 0);
 
     // switch the back buffer and the front buffer
+	// params shouldn't need to be changed for what we're doing
     swapchain->Present(0, 0);
 }
 
-
-// this is the function that cleans up Direct3D and COM
+// clean up Direct3D and COM
 void CleanD3D(void)
 {
     swapchain->SetFullscreenState(FALSE, NULL);    // switch to windowed mode
@@ -222,7 +211,7 @@ void CleanD3D(void)
 }
 
 
-// this is the function that creates the shape to render
+// Create the shape we wish to render
 void InitGraphics()
 {
     // create a triangle using the VERTEX struct
@@ -235,15 +224,15 @@ void InitGraphics()
 
 
     // create the vertex buffer
-    D3D11_BUFFER_DESC bd;
-    ZeroMemory(&bd, sizeof(bd));
+    D3D11_BUFFER_DESC buffer;
+    ZeroMemory(&buffer, sizeof(buffer));
 
-    bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
-    bd.ByteWidth = sizeof(VERTEX) * 3;             // size is the VERTEX struct * 3
-    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
-    bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
+    buffer.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
+    buffer.ByteWidth = sizeof(VERTEX) * 3;             // size is the VERTEX struct * 3
+    buffer.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
+    buffer.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
 
-    dev->CreateBuffer(&bd, NULL, &pVBuffer);       // create the buffer
+    dev->CreateBuffer(&buffer, NULL, &pVBuffer);       // create the buffer
 
 
     // copy the vertices into the buffer
@@ -257,7 +246,7 @@ void InitGraphics()
 // this function loads and prepares the shaders
 void InitPipeline()
 {
-    // load and compile the two shaders
+    // load and compile the vertex shader and pixel shader
     ID3D10Blob *VS, *PS;
     D3DX11CompileFromFile(L"shaders.shader", 0, 0, "VShader", "vs_4_0", 0, 0, 0, &VS, 0, 0);
     D3DX11CompileFromFile(L"shaders.shader", 0, 0, "PShader", "ps_4_0", 0, 0, 0, &PS, 0, 0);
