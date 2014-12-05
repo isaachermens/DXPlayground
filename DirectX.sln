@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Triangle", "2DTest\2DTest.v
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sierpinski", "Sierpinski\Sierpinski.vcxproj", "{1006115A-3316-4465-8A66-FA621A5A498A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Transform", "Transform\Transform.vcxproj", "{00DE019C-47D4-483A-BE0E-C0841C474594}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -25,6 +27,10 @@ Global
 		{1006115A-3316-4465-8A66-FA621A5A498A}.Debug|Win32.Build.0 = Debug|Win32
 		{1006115A-3316-4465-8A66-FA621A5A498A}.Release|Win32.ActiveCfg = Release|Win32
 		{1006115A-3316-4465-8A66-FA621A5A498A}.Release|Win32.Build.0 = Release|Win32
+		{00DE019C-47D4-483A-BE0E-C0841C474594}.Debug|Win32.ActiveCfg = Debug|Win32
+		{00DE019C-47D4-483A-BE0E-C0841C474594}.Debug|Win32.Build.0 = Debug|Win32
+		{00DE019C-47D4-483A-BE0E-C0841C474594}.Release|Win32.ActiveCfg = Release|Win32
+		{00DE019C-47D4-483A-BE0E-C0841C474594}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

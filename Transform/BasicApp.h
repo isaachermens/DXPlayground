@@ -31,7 +31,10 @@
 #include <dwrite.h>
 #include <wincodec.h>
 #include <vector>
+#include <fstream>
 
+using std::ifstream;
+using std::istream;
 using std::vector;
 
 // define the screen resolution
@@ -76,13 +79,16 @@ public:
     void RunMessageLoop();
 
 private:
-	vector<D2D1_POINT_2F> _points;
+	vector<vector<D2D1_POINT_2F>> _dino;
+	D2D1_POINT_2F _center;
 	HWND _hwnd;
 	ID2D1Factory* _pDirect2dFactory;
 	ID2D1HwndRenderTarget* _pRenderTarget;
 	ID2D1SolidColorBrush* _pPointBrush;
-	ID2D1SolidColorBrush* _pLineBrush;
-	int _numChaoticPoints;
+	double scale;
+	double rotation;
+	D2D1_POINT_2F offset;
+
 
     // Initialize device-independent resources.
     HRESULT CreateDeviceIndependentResources();
@@ -103,11 +109,13 @@ private:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	// Convenience method for drawing points
-	void DrawPoint(D2D1_POINT_2F center, ID2D1SolidColorBrush* brush, int offset);
+	void DrawPolyline(vector<D2D1_POINT_2F> strip, ID2D1SolidColorBrush* brush);
 
 	void OnLButtonUp(int pixelX, int pixelY, DWORD flags);
 
 	void OnKeyDown(UINT vkey);
 
 	D2D1_POINT_2F CalculateMidpoint(D2D1_POINT_2F first, D2D1_POINT_2F second);
+
+	void ReadInputFile(istream &in);
 };

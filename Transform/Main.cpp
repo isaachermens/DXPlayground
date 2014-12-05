@@ -44,7 +44,6 @@ BasicApp::BasicApp() :
     _pDirect2dFactory(NULL),
     _pRenderTarget(NULL),
     _pPointBrush(NULL),
-    _pLineBrush(NULL),
 	_numChaoticPoints(256)
 {
 }
@@ -56,8 +55,6 @@ BasicApp::~BasicApp()
     SafeRelease(&_pDirect2dFactory);
     SafeRelease(&_pRenderTarget);
     SafeRelease(&_pPointBrush);
-    SafeRelease(&_pLineBrush);
-
 }
 
 // Creates the application window and device-independent
@@ -82,7 +79,7 @@ HRESULT BasicApp::Initialize()
         wcex.hbrBackground = NULL;
         wcex.lpszMenuName  = NULL;
         wcex.hCursor       = LoadCursor(NULL, IDI_APPLICATION);
-        wcex.lpszClassName = L"SierpinskiTriangle";
+        wcex.lpszClassName = L"Transform";
 
         RegisterClassEx(&wcex);
 
@@ -98,8 +95,8 @@ HRESULT BasicApp::Initialize()
 
         // Create the window.
         _hwnd = CreateWindow(
-            L"SierpinskiTriangle",
-            L"Sierpinski Triangle",
+            L"Transform",
+            L"2D Transform",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
@@ -117,8 +114,40 @@ HRESULT BasicApp::Initialize()
             UpdateWindow(_hwnd);
         }
     }
-
+	ifstream relfile("dino.dat");
+	if (relfile.good()) {
+		ReadInputFile(relfile);
+		relfile.close();
+		InvalidateRect(_hwnd, NULL, FALSE);
+	}
+	else {
+		exit(1);
+	}
     return hr;
+}
+
+void BasicApp::ReadInputFile(istream &in) {
+	float x, y;
+	int xAvg = 0, yAvg = 0, pointTotal = 0;
+	//  Read the total number of polylines
+	int numLines,numPoints;
+	in >> numLines;
+	//  Read in the points for each polyline
+	for (int i = 0; i < numLines; i++) {
+		in >> numPoints;
+		vector<D2D1_POINT_2F> line;
+		for (int j = 0; j < numPoints; j++) {
+			in >> x >> y;
+			line.push_back(D2D1::Point2F(x, 440 - y));
+			pointTotal++;
+			xAvg += x;
+			yAvg += y;
+		}
+		_dino.push_back(line);
+	}
+	xAvg /= pointTotal;
+	yAvg /= pointTotal;
+	_center = D2D1::Point2F(xAvg, yAvg);
 }
 
 // Creates resources that are not bound to a particular device.
@@ -133,7 +162,6 @@ HRESULT BasicApp::CreateDeviceIndependentResources()
 
     return hr;
 }
-
 
 // Creates resources that are bound to a particular
 // Direct3D device. These resources need to be recreated
@@ -169,14 +197,6 @@ HRESULT BasicApp::CreateDeviceResources()
                 &_pPointBrush
                 );
         }
-        if (SUCCEEDED(hr))
-        {
-            // Create a blue brush.
-            hr = _pRenderTarget->CreateSolidColorBrush(
-                D2D1::ColorF(D2D1::ColorF::CornflowerBlue),
-                &_pLineBrush
-                );
-        }
     }
 
     return hr;
@@ -188,7 +208,6 @@ void BasicApp::DiscardDeviceResources()
 {
     SafeRelease(&_pRenderTarget);
     SafeRelease(&_pPointBrush);
-    SafeRelease(&_pLineBrush);
 }
 
 // Runs the main window message loop.
@@ -203,17 +222,14 @@ void BasicApp::RunMessageLoop()
     }
 }
 
-void BasicApp::DrawPoint(D2D1_POINT_2F center, ID2D1SolidColorBrush* brush, int offset){
-	_pRenderTarget->DrawLine(
-            D2D1::Point2F(center.x-offset, center.y),
-            D2D1::Point2F(center.x+offset, center.y),
-            brush,
-            1.0f);
-	_pRenderTarget->DrawLine(
-            D2D1::Point2F(center.x, center.y-offset),
-            D2D1::Point2F(center.x, center.y+offset),
-            brush,
-            1.0f);
+void BasicApp::DrawPolyline(vector<D2D1_POINT_2F> strip, ID2D1SolidColorBrush* brush){
+	for(int i = 0; i + 1 < strip.size(); i++){
+		_pRenderTarget->DrawLine(
+				strip[i],
+				strip[i+1],
+				brush,
+				1.0f);
+	}
 }
 
 D2D1_POINT_2F BasicApp::CalculateMidpoint(D2D1_POINT_2F first, D2D1_POINT_2F second){
@@ -232,27 +248,17 @@ HRESULT BasicApp::OnRender()
     if (SUCCEEDED(hr))
     {
         _pRenderTarget->BeginDraw();
+		auto identity = D2D1::Matrix3x2F::Identity();
+		auto flip = D2D1::Matrix3x2F::Rotation(180, _center);
+        _pRenderTarget->SetTransform(identity);
 
-        _pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 
         _pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
 
         D2D1_SIZE_F rtSize = _pRenderTarget->GetSize();
 
-		for(int i = 0; i < _points.size(); i++){
-			DrawPoint(_points[i], _pPointBrush, 4);
-		}
-		if(_points.size() == 4){
-			auto seedPoint = _points[3];
-			for (int i = 0; i < _numChaoticPoints; i++) {
-				// choose a random vertex of the triangle
-				auto chosenVertex = _points[rand() % 3];
-				// Draw the midpoint of the random vertex and the seedpoint
-				// Then make that midpoint the seedpoint for the next iteration
-				auto midpoint = CalculateMidpoint(chosenVertex, seedPoint);
-				DrawPoint(midpoint, _pPointBrush, 2);
-				seedPoint = midpoint;
-			}
+		for (auto i = 0; i < _dino.size(); i++) {
+			DrawPolyline(_dino[i], _pPointBrush);
 		}
         hr = _pRenderTarget->EndDraw();
     }
@@ -283,9 +289,6 @@ void BasicApp::OnLButtonUp(int pixelX, int pixelY, DWORD flags)
 {
     //const float dipX = DPIScale::PixelsToDipsX(pixelX);
     //const float dipY = DPIScale::PixelsToDipsY(pixelY);
-	if (_points.size() < 4) {
-		_points.push_back(D2D1::Point2F(pixelX, pixelY));
-	}
     InvalidateRect(_hwnd, NULL, FALSE);
 }
 
@@ -295,20 +298,13 @@ void BasicApp::OnKeyDown(UINT vkey)
     switch (vkey)
     {
 	case 78: // n
-		_points.push_back(D2D1::Point2F(200, 200));
 		// redraw
+		break;
 	case 85: // u
-		if (_numChaoticPoints < 1048576) {
-			_numChaoticPoints <<= 1; // * 2
-		}
 		break;
 	case 68: // d
-		if (_numChaoticPoints > 256) {
-			_numChaoticPoints >>= 1; // / 2
-		}
 		break;
 	case 67: // d
-		_points.clear();
 		break;
 
 	default:
@@ -316,7 +312,6 @@ void BasicApp::OnKeyDown(UINT vkey)
 	}
 	InvalidateRect(_hwnd, NULL, FALSE);
 }
-
 
 // Handles window messages.
 LRESULT CALLBACK BasicApp::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
